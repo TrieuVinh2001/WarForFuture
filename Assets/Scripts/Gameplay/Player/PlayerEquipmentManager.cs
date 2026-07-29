@@ -9,15 +9,17 @@ namespace WarForFuture.Gameplay.Player
     {
         public string name;
         public EquipmentSlot slot;
+        public ItemType itemType;
         public int hpBonus;
         public int attackBonus;
         public int defenseBonus;
         public float speedBonus;
 
-        public EquipmentStatBonus(string name, EquipmentSlot slot, int hp, int atk, int def, float spd)
+        public EquipmentStatBonus(string name, EquipmentSlot slot, ItemType itemType, int hp, int atk, int def, float spd)
         {
             this.name = name;
             this.slot = slot;
+            this.itemType = itemType;
             this.hpBonus = hp;
             this.attackBonus = atk;
             this.defenseBonus = def;
@@ -52,26 +54,44 @@ namespace WarForFuture.Gameplay.Player
             return null;
         }
 
+        public bool IsEquipped(ItemType type)
+        {
+            foreach (var item in equippedItems.Values)
+            {
+                if (item.itemType == type) return true;
+            }
+            return false;
+        }
+
+        public EquipmentSlot? GetSlotOfItem(ItemType type)
+        {
+            foreach (var kvp in equippedItems)
+            {
+                if (kvp.Value.itemType == type) return kvp.Key;
+            }
+            return null;
+        }
+
         public static EquipmentStatBonus GetItemStats(ItemType type)
         {
             switch (type)
             {
                 case ItemType.HelmetItem:
-                    return new EquipmentStatBonus("Mũ Da (Leather Helmet)", EquipmentSlot.Helmet, hp: 20, atk: 0, def: 5, spd: 0f);
+                    return new EquipmentStatBonus("Mũ Da (Leather Helmet)", EquipmentSlot.Helmet, ItemType.HelmetItem, hp: 20, atk: 0, def: 5, spd: 0f);
                 case ItemType.ArmorItem:
-                    return new EquipmentStatBonus("Áo Da (Leather Armor)", EquipmentSlot.Armor, hp: 50, atk: 0, def: 12, spd: 0f);
+                    return new EquipmentStatBonus("Áo Da (Leather Armor)", EquipmentSlot.Armor, ItemType.ArmorItem, hp: 50, atk: 0, def: 12, spd: 0f);
                 case ItemType.PantsItem:
-                    return new EquipmentStatBonus("Quần Da (Leather Pants)", EquipmentSlot.Pants, hp: 25, atk: 0, def: 8, spd: 0.3f);
+                    return new EquipmentStatBonus("Quần Da (Leather Pants)", EquipmentSlot.Pants, ItemType.PantsItem, hp: 25, atk: 0, def: 8, spd: 0.3f);
                 case ItemType.BootsItem:
-                    return new EquipmentStatBonus("Giày Da (Leather Boots)", EquipmentSlot.Boots, hp: 10, atk: 0, def: 3, spd: 1.0f);
+                    return new EquipmentStatBonus("Giày Da (Leather Boots)", EquipmentSlot.Boots, ItemType.BootsItem, hp: 10, atk: 0, def: 3, spd: 1.0f);
                 case ItemType.GlovesItem:
-                    return new EquipmentStatBonus("Găng Tay Da (Leather Gloves)", EquipmentSlot.Gloves, hp: 10, atk: 8, def: 3, spd: 0f);
+                    return new EquipmentStatBonus("Găng Tay Da (Leather Gloves)", EquipmentSlot.Gloves, ItemType.GlovesItem, hp: 10, atk: 8, def: 3, spd: 0f);
                 case ItemType.NecklaceItem:
-                    return new EquipmentStatBonus("Vòng Cổ Đá (Stone Necklace)", EquipmentSlot.Necklace, hp: 30, atk: 5, def: 5, spd: 0f);
+                    return new EquipmentStatBonus("Vòng Cổ Đá (Stone Necklace)", EquipmentSlot.Necklace, ItemType.NecklaceItem, hp: 30, atk: 5, def: 5, spd: 0f);
                 case ItemType.RingItem:
-                    return new EquipmentStatBonus("Nhẫn Sắt (Iron Ring)", EquipmentSlot.Ring, hp: 15, atk: 12, def: 2, spd: 0.2f);
+                    return new EquipmentStatBonus("Nhẫn Sắt (Iron Ring)", EquipmentSlot.Ring, ItemType.RingItem, hp: 15, atk: 12, def: 2, spd: 0.2f);
                 default:
-                    return new EquipmentStatBonus("None", EquipmentSlot.Helmet, 0, 0, 0, 0f);
+                    return new EquipmentStatBonus("None", EquipmentSlot.Helmet, type, 0, 0, 0, 0f);
             }
         }
 

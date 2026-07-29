@@ -15,9 +15,14 @@ namespace WarForFuture.UI
     {
         public static MiniMapUI Instance { get; private set; }
 
-        private GameObject miniMapPanel;
-        private RectTransform radarAreaRt;
-        private TextMeshProUGUI titleText;
+        [Header("UI References")]
+        [SerializeField] private GameObject miniMapPanel;
+        [SerializeField] private RectTransform radarAreaRt;
+        [SerializeField] private TextMeshProUGUI titleText;
+
+        public GameObject MiniMapPanel { get => miniMapPanel; set => miniMapPanel = value; }
+        public RectTransform RadarAreaRt { get => radarAreaRt; set => radarAreaRt = value; }
+        public TextMeshProUGUI TitleText { get => titleText; set => titleText = value; }
 
         private bool isFullScreenMap = false;
         private Vector2 mapWorldMin = new Vector2(-20f, -20f);
@@ -35,11 +40,6 @@ namespace WarForFuture.UI
             Instance = this;
         }
 
-        private void Start()
-        {
-            SetupUGUIMiniMapWindow();
-        }
-
         private void Update()
         {
             if (Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame)
@@ -49,23 +49,6 @@ namespace WarForFuture.UI
             }
 
             UpdateMiniMapBlips();
-        }
-
-        private void SetupUGUIMiniMapWindow()
-        {
-            Canvas canvas = GetComponentInParent<Canvas>();
-            if (canvas == null) return;
-
-            // MiniMap Panel positioned at Top-Right
-            miniMapPanel = CreateUIPanel(canvas.transform, "MiniMapPanelUGUI", new Vector2(-10, -10), new Vector2(200, 180), new Vector2(1, 1), new Vector2(1, 1));
-            miniMapPanel.GetComponent<Image>().color = new Color(0.08f, 0.1f, 0.14f, 0.95f);
-
-            titleText = CreateUIText(miniMapPanel.transform, "TitleText", "MINI MAP [Phím M]", 11, TextAlignmentOptions.Center, new Vector2(0, -5), new Vector2(200, 20));
-
-            // Dark Radar Area
-            GameObject radarArea = CreateUIPanel(miniMapPanel.transform, "RadarArea", new Vector2(10, -25), new Vector2(180, 145), new Vector2(0, 1), new Vector2(0, 1));
-            radarArea.GetComponent<Image>().color = new Color(0.05f, 0.12f, 0.06f, 0.95f);
-            radarAreaRt = radarArea.GetComponent<RectTransform>();
         }
 
         private void UpdateMiniMapMode()
@@ -173,42 +156,23 @@ namespace WarForFuture.UI
             return new Vector2(x, y);
         }
 
-        // --- TMPro uGUI Helpers ---
-        private GameObject CreateUIPanel(Transform parent, string name, Vector2 pos, Vector2 size, Vector2 anchorMin, Vector2 anchorMax)
+        [ContextMenu("Auto Bind UI Elements")]
+        public void AutoBindUIElements()
         {
-            GameObject panel = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            panel.transform.SetParent(parent, false);
+            if (miniMapPanel == null)
+            {
+                Transform t = transform.Find("MiniMapPanelUGUI");
+                if (t != null) miniMapPanel = t.gameObject;
+            }
 
-            RectTransform rt = panel.GetComponent<RectTransform>();
-            rt.anchorMin = anchorMin;
-            rt.anchorMax = anchorMax;
-            rt.pivot = anchorMin;
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
+            if (miniMapPanel != null)
+            {
+                Transform title = miniMapPanel.transform.Find("TitleText");
+                if (title != null) titleText = title.GetComponent<TextMeshProUGUI>();
 
-            Image img = panel.GetComponent<Image>();
-            img.color = new Color(0.1f, 0.12f, 0.15f, 0.9f);
-            return panel;
-        }
-
-        private TextMeshProUGUI CreateUIText(Transform parent, string name, string content, float fontSize, TextAlignmentOptions alignment, Vector2 pos, Vector2 size)
-        {
-            GameObject textGo = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-            textGo.transform.SetParent(parent, false);
-
-            RectTransform rt = textGo.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 1);
-            rt.anchorMax = new Vector2(0, 1);
-            rt.pivot = new Vector2(0, 1);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-
-            TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
-            tmp.text = content;
-            tmp.fontSize = fontSize;
-            tmp.alignment = alignment;
-            tmp.color = Color.white;
-            return tmp;
+                Transform radar = miniMapPanel.transform.Find("RadarArea");
+                if (radar != null) radarAreaRt = radar.GetComponent<RectTransform>();
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -13,8 +14,11 @@ namespace WarForFuture.UI
     {
         public static BuildingUI Instance { get; private set; }
 
-        private GameObject buildingHotbarPanel;
+        [Header("UI References")]
+        [SerializeField] private GameObject buildingHotbarPanel;
+        [SerializeField] private Button[] buildingButtons;
 
+        [Header("Preview Preview")]
         [SerializeField] private GameObject ghostPreviewObject;
         private SpriteRenderer ghostRenderer;
 
@@ -22,6 +26,9 @@ namespace WarForFuture.UI
         private BuildingType selectedBuildingType = BuildingType.Wall;
         private ItemType selectedItemType = ItemType.WallItem;
         private Vector2Int currentGridPos;
+
+        public GameObject BuildingHotbarPanel { get => buildingHotbarPanel; set => buildingHotbarPanel = value; }
+        public Button[] BuildingButtons { get => buildingButtons; set => buildingButtons = value; }
 
         private void Awake()
         {
@@ -48,8 +55,24 @@ namespace WarForFuture.UI
 
         private void Start()
         {
-            SetupUGUIBuildingHotbar();
+            InitButtonListeners();
             SetBuildMode(false);
+        }
+
+        private void InitButtonListeners()
+        {
+            if (buildingButtons != null)
+            {
+                for (int i = 0; i < buildingButtons.Length; i++)
+                {
+                    int index = i;
+                    if (buildingButtons[i] != null)
+                    {
+                        buildingButtons[i].onClick.RemoveAllListeners();
+                        buildingButtons[i].onClick.AddListener(() => SelectBuilding(index));
+                    }
+                }
+            }
         }
 
         private void Update()
@@ -144,27 +167,6 @@ namespace WarForFuture.UI
             SetBuildMode(true);
         }
 
-        private void SetupUGUIBuildingHotbar()
-        {
-            Canvas canvas = GetComponentInParent<Canvas>();
-            if (canvas == null) return;
-
-            buildingHotbarPanel = CreateUIPanel(canvas.transform, "BuildingHotbarUGUI", new Vector2(0, 60), new Vector2(680, 60), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-            buildingHotbarPanel.GetComponent<Image>().color = new Color(0.08f, 0.1f, 0.14f, 0.95f);
-
-            CreateUIText(buildingHotbarPanel.transform, "Header", "=== CHỌN CÔNG TRÌNH CẦN ĐẶT (CLICK VÀO VỊ TRÍ BẢN ĐỒ ĐỂ XÂY) ===", 11, TextAlignmentOptions.Center, new Vector2(0, -5), new Vector2(680, 20));
-
-            string[] names = new string[] { "1. Tường Gỗ", "2. Cửa Gỗ", "3. Bàn Chế Tạo", "4. Lửa Trại", "5. Rương", "6. Tháp Cung" };
-            float startX = 10f;
-            float btnW = 105f;
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                int index = i;
-                CreateUIButton(buildingHotbarPanel.transform, $"Btn_Building_{i}", names[i], new Vector2(startX + i * (btnW + 5), -25), new Vector2(btnW, 30), () => SelectBuilding(index));
-            }
-        }
-
         private Sprite CreateGhostSprite()
         {
             Texture2D tex = new Texture2D(32, 32);
@@ -175,62 +177,25 @@ namespace WarForFuture.UI
             return Sprite.Create(tex, new Rect(0, 0, 32, 32), new Vector2(0.5f, 0.5f), 32);
         }
 
-        // --- TMPro uGUI Helpers ---
-        private GameObject CreateUIPanel(Transform parent, string name, Vector2 pos, Vector2 size, Vector2 anchorMin, Vector2 anchorMax)
+        [ContextMenu("Auto Bind UI Elements")]
+        public void AutoBindUIElements()
         {
-            GameObject panel = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            panel.transform.SetParent(parent, false);
+            if (buildingHotbarPanel == null)
+            {
+                Transform t = transform.Find("BuildingHotbarUGUI");
+                if (t != null) buildingHotbarPanel = t.gameObject;
+            }
 
-            RectTransform rt = panel.GetComponent<RectTransform>();
-            rt.anchorMin = anchorMin;
-            rt.anchorMax = anchorMax;
-            rt.pivot = anchorMin;
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-
-            Image img = panel.GetComponent<Image>();
-            img.color = new Color(0.1f, 0.12f, 0.15f, 0.9f);
-            return panel;
-        }
-
-        private TextMeshProUGUI CreateUIText(Transform parent, string name, string content, float fontSize, TextAlignmentOptions alignment, Vector2 pos, Vector2 size)
-        {
-            GameObject textGo = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-            textGo.transform.SetParent(parent, false);
-
-            RectTransform rt = textGo.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 1);
-            rt.anchorMax = new Vector2(0, 1);
-            rt.pivot = new Vector2(0, 1);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-
-            TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
-            tmp.text = content;
-            tmp.fontSize = fontSize;
-            tmp.alignment = alignment;
-            tmp.color = Color.white;
-            return tmp;
-        }
-
-        private Button CreateUIButton(Transform parent, string name, string label, Vector2 pos, Vector2 size, UnityEngine.Events.UnityAction onClickAction)
-        {
-            GameObject btnGo = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
-            btnGo.transform.SetParent(parent, false);
-
-            RectTransform rt = btnGo.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 1);
-            rt.anchorMax = new Vector2(0, 1);
-            rt.pivot = new Vector2(0, 1);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-
-            btnGo.GetComponent<Image>().color = new Color(0.2f, 0.25f, 0.35f, 0.9f);
-
-            TextMeshProUGUI tmp = CreateUIText(btnGo.transform, "BtnText", label, 11, TextAlignmentOptions.Center, Vector2.zero, size);
-            Button btn = btnGo.GetComponent<Button>();
-            if (onClickAction != null) btn.onClick.AddListener(onClickAction);
-            return btn;
+            if (buildingHotbarPanel != null)
+            {
+                List<Button> list = new List<Button>();
+                for (int i = 0; i < 6; i++)
+                {
+                    Transform b = buildingHotbarPanel.transform.Find($"Btn_Building_{i}");
+                    if (b != null) list.Add(b.GetComponent<Button>());
+                }
+                buildingButtons = list.ToArray();
+            }
         }
     }
 }

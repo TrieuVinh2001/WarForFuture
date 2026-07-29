@@ -151,21 +151,44 @@ namespace WarForFuture.Gameplay
             var canvas = FindObjectOfType<Canvas>();
             if (canvas == null)
             {
-                var canvasGo = new GameObject("HUDCanvas");
+                var canvasGo = new GameObject("Canvas");
                 canvas = canvasGo.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvasGo.AddComponent<CanvasScaler>();
+                var scaler = canvasGo.AddComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920, 1080);
                 canvasGo.AddComponent<GraphicRaycaster>();
+            }
 
-                var uiManagerGo = new GameObject("UIManager");
-                uiManagerGo.transform.SetParent(canvasGo.transform);
-                uiManagerGo.AddComponent<HUDManager>();
-                uiManagerGo.AddComponent<CraftingUI>();
-                uiManagerGo.AddComponent<BuildingUI>();
-                uiManagerGo.AddComponent<CampfireUI>();
-                uiManagerGo.AddComponent<InventoryUI>();
-                uiManagerGo.AddComponent<MiniMapUI>();
-                uiManagerGo.AddComponent<GameOverUI>();
+            // Ensure UI Prefabs are instantiated under Canvas if missing
+            EnsureUIPrefab<HUDManager>(canvas.transform, "Prefabs/UI/HUDUIPrefab");
+            EnsureUIPrefab<MiniMapUI>(canvas.transform, "Prefabs/UI/MiniMapUIPrefab");
+            EnsureUIPrefab<InventoryUI>(canvas.transform, "Prefabs/UI/InventoryUIPrefab");
+            EnsureUIPrefab<CraftingUI>(canvas.transform, "Prefabs/UI/CraftingUIPrefab");
+            EnsureUIPrefab<BuildingUI>(canvas.transform, "Prefabs/UI/BuildingUIPrefab");
+            EnsureUIPrefab<CampfireUI>(canvas.transform, "Prefabs/UI/CampfireUIPrefab");
+            EnsureUIPrefab<GameOverUI>(canvas.transform, "Prefabs/UI/GameOverUIPrefab");
+        }
+
+        private void EnsureUIPrefab<T>(Transform canvasTransform, string resourcePath) where T : Component
+        {
+            T existing = FindObjectOfType<T>();
+            if (existing == null)
+            {
+                GameObject prefab = UnityEngine.Resources.Load<GameObject>(resourcePath);
+                if (prefab != null)
+                {
+                    GameObject instantiated = Instantiate(prefab, canvasTransform);
+                    RectTransform rt = instantiated.GetComponent<RectTransform>();
+                    if (rt != null)
+                    {
+                        rt.anchorMin = Vector2.zero;
+                        rt.anchorMax = Vector2.one;
+                        rt.offsetMin = Vector2.zero;
+                        rt.offsetMax = Vector2.zero;
+                        rt.localScale = Vector3.one;
+                    }
+                }
             }
         }
     }

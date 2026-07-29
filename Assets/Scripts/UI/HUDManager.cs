@@ -14,19 +14,28 @@ namespace WarForFuture.UI
     {
         public static HUDManager Instance { get; private set; }
 
-        // Top-Left 3 Status Bars
-        private Slider hpSlider;
-        private TextMeshProUGUI hpText;
-        private Slider manaSlider;
-        private TextMeshProUGUI manaText;
-        private Slider foodSlider;
-        private TextMeshProUGUI foodText;
+        [Header("Top-Left Status Bars")]
+        [SerializeField] private Slider hpSlider;
+        [SerializeField] private TextMeshProUGUI hpText;
+        [SerializeField] private Slider manaSlider;
+        [SerializeField] private TextMeshProUGUI manaText;
+        [SerializeField] private Slider foodSlider;
+        [SerializeField] private TextMeshProUGUI foodText;
 
-        // Top-Center Info (Resources & Wave)
-        private TextMeshProUGUI centerInfoText;
+        [Header("Top-Center Info")]
+        [SerializeField] private TextMeshProUGUI centerInfoText;
 
-        // Bottom-Right Controls Guide
-        private TextMeshProUGUI controlsGuideText;
+        [Header("Bottom-Right Guide")]
+        [SerializeField] private TextMeshProUGUI controlsGuideText;
+
+        public Slider HpSlider { get => hpSlider; set => hpSlider = value; }
+        public TextMeshProUGUI HpText { get => hpText; set => hpText = value; }
+        public Slider ManaSlider { get => manaSlider; set => manaSlider = value; }
+        public TextMeshProUGUI ManaText { get => manaText; set => manaText = value; }
+        public Slider FoodSlider { get => foodSlider; set => foodSlider = value; }
+        public TextMeshProUGUI FoodText { get => foodText; set => foodText = value; }
+        public TextMeshProUGUI CenterInfoText { get => centerInfoText; set => centerInfoText = value; }
+        public TextMeshProUGUI ControlsGuideText { get => controlsGuideText; set => controlsGuideText = value; }
 
         private int currentHp = 100;
         private int maxHp = 100;
@@ -50,8 +59,6 @@ namespace WarForFuture.UI
 
         private void Start()
         {
-            SetupUGUIElements();
-
             if (PlayerController.Instance != null)
             {
                 PlayerController.Instance.OnHpChanged += UpdateHp;
@@ -59,7 +66,6 @@ namespace WarForFuture.UI
                 PlayerController.Instance.OnFoodChanged += UpdateFood;
                 PlayerController.Instance.OnWeaponSlotChanged += (slot) => { currentWeaponSlot = slot; UpdateControlsGuide(); };
 
-                // Immediately load initial status values on game load so HP (Red) & Mana (Blue) display bright colors!
                 UpdateHp(PlayerController.Instance.CurrentHp, PlayerController.Instance.EffectiveMaxHp);
                 UpdateMana(PlayerController.Instance.CurrentMana, PlayerController.Instance.MaxMana);
                 UpdateFood(PlayerController.Instance.CurrentFood, PlayerController.Instance.MaxFood);
@@ -75,35 +81,7 @@ namespace WarForFuture.UI
             {
                 DayNightCycleManager.Instance.OnWaveStateUpdated += (waveState) => { currentWaveState = waveState; UpdateCenterInfo(); };
             }
-        }
 
-        private void SetupUGUIElements()
-        {
-            Canvas canvas = GetComponentInParent<Canvas>();
-            if (canvas == null) return;
-
-            // 1. TOP-LEFT: 3 LARGE STATUS BARS (HP, MANA, STAMINA)
-            GameObject topLeftPanel = CreateUIPanel(canvas.transform, "TopLeft_StatusPanel", new Vector2(12, -12), new Vector2(340, 135), new Vector2(0, 1), new Vector2(0, 1));
-
-            // Health Bar (Red)
-            hpSlider = CreateUISlider(topLeftPanel.transform, "HpSlider", new Vector2(8, -8), new Vector2(324, 28), Color.red);
-            hpText = CreateUIText(topLeftPanel.transform, "HpText", "HEALTH: 100/100", 15, TextAlignmentOptions.Center, new Vector2(8, -7), new Vector2(324, 28));
-
-            // Mana Bar (Blue)
-            manaSlider = CreateUISlider(topLeftPanel.transform, "ManaSlider", new Vector2(8, -48), new Vector2(324, 28), new Color(0.2f, 0.6f, 1.0f));
-            manaText = CreateUIText(topLeftPanel.transform, "ManaText", "MANA: 100/100", 15, TextAlignmentOptions.Center, new Vector2(8, -47), new Vector2(324, 28));
-
-            // Stamina/Food Bar (Orange)
-            foodSlider = CreateUISlider(topLeftPanel.transform, "FoodSlider", new Vector2(8, -88), new Vector2(324, 28), new Color(1.0f, 0.7f, 0.1f));
-            foodText = CreateUIText(topLeftPanel.transform, "FoodText", "STAMINA: 100/100", 15, TextAlignmentOptions.Center, new Vector2(8, -87), new Vector2(324, 28));
-
-            // 2. TOP-CENTER: LARGE RESOURCES & WAVE STATUS
-            GameObject centerPanel = CreateUIPanel(canvas.transform, "TopCenter_InfoPanel", new Vector2(0, -12), new Vector2(780, 56), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            centerInfoText = CreateUIText(centerPanel.transform, "CenterInfoText", "DAY 1 - BAN NGÀY | Gold: 0 | Gỗ: 0 | Đá: 0 | Sợi: 0 | Thức ăn: 0", 17, TextAlignmentOptions.Center, new Vector2(0, 0), new Vector2(780, 56));
-
-            // 3. BOTTOM-RIGHT: LARGE CONTROLS GUIDE PANEL
-            GameObject bottomRightPanel = CreateUIPanel(canvas.transform, "BottomRight_ControlsPanel", new Vector2(-12, 12), new Vector2(340, 190), new Vector2(1, 0), new Vector2(1, 0));
-            controlsGuideText = CreateUIText(bottomRightPanel.transform, "ControlsText", "", 14, TextAlignmentOptions.TopLeft, new Vector2(12, -8), new Vector2(316, 175));
             UpdateControlsGuide();
         }
 
@@ -175,89 +153,33 @@ namespace WarForFuture.UI
             centerInfoText.text = $"<b><size=19>{cycleText}</size></b>\nGold: {gold} | Gỗ: {wood} | Đá: {stone} | Sợi: {fiber} | Thức ăn: {food}";
         }
 
-        // --- TMPro uGUI Helpers ---
-        private GameObject CreateUIPanel(Transform parent, string name, Vector2 pos, Vector2 size, Vector2 anchorMin, Vector2 anchorMax)
+        [ContextMenu("Auto Bind UI Elements")]
+        public void AutoBindUIElements()
         {
-            GameObject panel = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-            panel.transform.SetParent(parent, false);
+            Transform topLeft = transform.Find("TopLeft_StatusPanel");
+            if (topLeft != null)
+            {
+                Transform hpS = topLeft.Find("HpSlider"); if (hpS != null) hpSlider = hpS.GetComponent<Slider>();
+                Transform hpT = topLeft.Find("HpText"); if (hpT != null) hpText = hpT.GetComponent<TextMeshProUGUI>();
 
-            RectTransform rt = panel.GetComponent<RectTransform>();
-            rt.anchorMin = anchorMin;
-            rt.anchorMax = anchorMax;
-            rt.pivot = anchorMin;
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
+                Transform mpS = topLeft.Find("ManaSlider"); if (mpS != null) manaSlider = mpS.GetComponent<Slider>();
+                Transform mpT = topLeft.Find("ManaText"); if (mpT != null) manaText = mpT.GetComponent<TextMeshProUGUI>();
 
-            Image img = panel.GetComponent<Image>();
-            img.color = new Color(0.08f, 0.1f, 0.14f, 0.94f);
-            return panel;
-        }
+                Transform fdS = topLeft.Find("FoodSlider"); if (fdS != null) foodSlider = fdS.GetComponent<Slider>();
+                Transform fdT = topLeft.Find("FoodText"); if (fdT != null) foodText = fdT.GetComponent<TextMeshProUGUI>();
+            }
 
-        private TextMeshProUGUI CreateUIText(Transform parent, string name, string content, float fontSize, TextAlignmentOptions alignment, Vector2 pos, Vector2 size)
-        {
-            GameObject textGo = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-            textGo.transform.SetParent(parent, false);
+            Transform center = transform.Find("TopCenter_InfoPanel");
+            if (center != null)
+            {
+                Transform info = center.Find("CenterInfoText"); if (info != null) centerInfoText = info.GetComponent<TextMeshProUGUI>();
+            }
 
-            RectTransform rt = textGo.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 1);
-            rt.anchorMax = new Vector2(0, 1);
-            rt.pivot = new Vector2(0, 1);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-
-            TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
-            tmp.text = content;
-            tmp.fontSize = fontSize;
-            tmp.alignment = alignment;
-            tmp.color = Color.white;
-            return tmp;
-        }
-
-        private Slider CreateUISlider(Transform parent, string name, Vector2 pos, Vector2 size, Color fillColor)
-        {
-            GameObject sliderGo = new GameObject(name, typeof(RectTransform), typeof(Slider));
-            sliderGo.transform.SetParent(parent, false);
-
-            RectTransform rt = sliderGo.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 1);
-            rt.anchorMax = new Vector2(0, 1);
-            rt.pivot = new Vector2(0, 1);
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = size;
-
-            // Background
-            GameObject bgGo = new GameObject("Background", typeof(RectTransform), typeof(Image));
-            bgGo.transform.SetParent(sliderGo.transform, false);
-            RectTransform bgRt = bgGo.GetComponent<RectTransform>();
-            bgRt.anchorMin = Vector2.zero;
-            bgRt.anchorMax = Vector2.one;
-            bgRt.sizeDelta = Vector2.zero;
-            bgGo.GetComponent<Image>().color = new Color(0.2f, 0.2f, 0.2f, 0.8f);
-
-            // Fill Area & Fill
-            GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
-            fillArea.transform.SetParent(sliderGo.transform, false);
-            RectTransform fillAreaRt = fillArea.GetComponent<RectTransform>();
-            fillAreaRt.anchorMin = Vector2.zero;
-            fillAreaRt.anchorMax = Vector2.one;
-            fillAreaRt.sizeDelta = Vector2.zero;
-
-            GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-            fill.transform.SetParent(fillArea.transform, false);
-            RectTransform fillRt = fill.GetComponent<RectTransform>();
-            fillRt.anchorMin = Vector2.zero;
-            fillRt.anchorMax = Vector2.one;
-            fillRt.sizeDelta = Vector2.zero;
-            fill.GetComponent<Image>().color = fillColor;
-
-            Slider slider = sliderGo.GetComponent<Slider>();
-            slider.fillRect = fillRt;
-            slider.targetGraphic = bgGo.GetComponent<Image>();
-            slider.direction = Slider.Direction.LeftToRight;
-            slider.minValue = 0;
-            slider.maxValue = 100;
-            slider.value = 100;
-            return slider;
+            Transform bottomRight = transform.Find("BottomRight_ControlsPanel");
+            if (bottomRight != null)
+            {
+                Transform ctrl = bottomRight.Find("ControlsText"); if (ctrl != null) controlsGuideText = ctrl.GetComponent<TextMeshProUGUI>();
+            }
         }
     }
 }
